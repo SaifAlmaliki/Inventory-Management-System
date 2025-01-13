@@ -1,3 +1,16 @@
+/**
+ * Expense Summary Card Component
+ *
+ * A dashboard card component that displays a comprehensive summary of expenses using a donut chart.
+ * Features:
+ * - Interactive donut chart showing expense distribution by category
+ * - Total expenses display in the center of the donut
+ * - Color-coded legend for expense categories
+ * - Average expenses and trend indicator in the footer
+ * - Responsive layout that adapts to different screen sizes
+ * - Loading state handling
+ */
+
 import {
   ExpenseByCategorySummary,
   useGetDashboardMetricsQuery,
@@ -5,20 +18,24 @@ import {
 import { TrendingUp } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 
+// Type definition for expense category sums
 type ExpenseSums = {
   [category: string]: number;
 };
 
+// Color palette for the donut chart segments
 const colors = ["#00C49F", "#0088FE", "#FFBB28"];
 
 const CardExpenseSummary = () => {
+  // Fetch dashboard metrics data using RTK Query
   const { data: dashboardMetrics, isLoading } = useGetDashboardMetricsQuery();
 
+  // Extract expense summary and category data
   const expenseSummary = dashboardMetrics?.expenseSummary[0];
-
   const expenseByCategorySummary =
     dashboardMetrics?.expenseByCategorySummary || [];
 
+  // Calculate total expenses by category
   const expenseSums = expenseByCategorySummary.reduce(
     (acc: ExpenseSums, item: ExpenseByCategorySummary) => {
       const category = item.category + " Expenses";
@@ -30,6 +47,7 @@ const CardExpenseSummary = () => {
     {}
   );
 
+  // Transform expense sums into format required by PieChart
   const expenseCategories = Object.entries(expenseSums).map(
     ([name, value]) => ({
       name,
@@ -37,6 +55,7 @@ const CardExpenseSummary = () => {
     })
   );
 
+  // Calculate and format total expenses for center display
   const totalExpenses = expenseCategories.reduce(
     (acc, category: { value: number }) => acc + category.value,
     0
@@ -58,7 +77,7 @@ const CardExpenseSummary = () => {
           </div>
           {/* BODY */}
           <div className="xl:flex justify-between pr-7">
-            {/* CHART */}
+            {/* Donut Chart Section */}
             <div className="relative basis-3/5">
               <ResponsiveContainer width="100%" height={140}>
                 <PieChart>
@@ -72,6 +91,7 @@ const CardExpenseSummary = () => {
                     cx="50%"
                     cy="50%"
                   >
+                    {/* Render colored segments for each expense category */}
                     {expenseCategories.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
@@ -81,13 +101,14 @@ const CardExpenseSummary = () => {
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
+              {/* Center total display */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center basis-2/5">
                 <span className="font-bold text-xl">
                   ${formattedTotalExpenses}
                 </span>
               </div>
             </div>
-            {/* LABELS */}
+            {/* Category Legend */}
             <ul className="flex flex-col justify-around items-center xl:items-start py-5 gap-3">
               {expenseCategories.map((entry, index) => (
                 <li
@@ -103,7 +124,7 @@ const CardExpenseSummary = () => {
               ))}
             </ul>
           </div>
-          {/* FOOTER */}
+          {/* FOOTER - Average expenses and trend */}
           <div>
             <hr />
             {expenseSummary && (
