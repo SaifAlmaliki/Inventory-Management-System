@@ -1,19 +1,30 @@
 "use client";
 
-import {
-  ExpenseByCategorySummary,
-  useGetExpensesByCategoryQuery,
-} from "@/state/api";
+/**
+ * Expenses Page Component
+ *
+ * Purpose:
+ * This component provides a comprehensive expense analysis dashboard that allows users
+ * to visualize and filter expense data across different categories and date ranges.
+ *
+ * Features:
+ * - Interactive pie chart visualization of expenses by category
+ * - Category-based filtering (Office, Professional, Salaries)
+ * - Date range filtering
+ * - Real-time data updates and filtering
+ * - Responsive design for both desktop and mobile views
+ *
+ * Technical Implementation:
+ * - Uses RTK Query for data fetching
+ * - Implements memoization for performance optimization
+ * - Utilizes Recharts for data visualization
+ * - Employs TypeScript for type safety
+ */
+
+import { ExpenseByCategorySummary, useGetExpensesByCategoryQuery } from "@/state/api";
 import { useMemo, useState } from "react";
 import Header from "@/app/(components)/Header";
-import {
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 type AggregatedDataItem = {
   name: string;
@@ -30,12 +41,7 @@ const Expenses = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
-  const {
-    data: expensesData,
-    isLoading,
-    isError,
-  } = useGetExpensesByCategoryQuery();
+  const { data: expensesData, isLoading, isError } = useGetExpensesByCategoryQuery();
   const expenses = useMemo(() => expensesData ?? [], [expensesData]);
 
   const parseDate = (dateString: string) => {
@@ -43,37 +49,47 @@ const Expenses = () => {
     return date.toISOString().split("T")[0];
   };
 
+  // Complex data aggregation using useMemo for performance optimization
   const aggregatedData: AggregatedDataItem[] = useMemo(() => {
+    // First, filter the data based on selected category and date range
     const filtered: AggregatedData = expenses
       .filter((data: ExpenseByCategorySummary) => {
+        // Check if expense matches selected category (or show all)
         const matchesCategory =
           selectedCategory === "All" || data.category === selectedCategory;
+
+        // Convert and compare dates for date range filtering
         const dataDate = parseDate(data.date);
         const matchesDate =
           !startDate ||
           !endDate ||
           (dataDate >= startDate && dataDate <= endDate);
+
         return matchesCategory && matchesDate;
       })
+      // Reduce filtered data to aggregate amounts by category
       .reduce((acc: AggregatedData, data: ExpenseByCategorySummary) => {
         const amount = parseInt(data.amount);
         if (!acc[data.category]) {
+          // Initialize new category with random color for pie chart
           acc[data.category] = { name: data.category, amount: 0 };
+          // Generate random color for pie chart segment
           acc[data.category].color = `#${Math.floor(
             Math.random() * 16777215
           ).toString(16)}`;
-          acc[data.category].amount += amount;
         }
+        // Accumulate amounts for each category
+        acc[data.category].amount += amount;
         return acc;
       }, {});
 
+    // Convert aggregated object to array for chart rendering
     return Object.values(filtered);
-  }, [expenses, selectedCategory, startDate, endDate]);
+  }, [expenses, selectedCategory, startDate, endDate]);  // Recalculate when filters change
 
   const classNames = {
-    label: "block text-sm font-medium text-gray-700",
-    selectInput:
-      "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",
+    label: "block text-sm font-medium text-gray-300 dark:text-gray-700 mb-1",
+    selectInput: "mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 bg-gray-200 dark:bg-gray-800 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
   };
 
   if (isLoading) {
