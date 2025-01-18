@@ -19,11 +19,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const {
-    data: products,
-    isLoading,
-    isError,
-  } = useGetProductsQuery(searchTerm);
+  const { data: products, isLoading, isError } = useGetProductsQuery(searchTerm);
 
   const [createProduct] = useCreateProductMutation();
   const handleCreateProduct = async (productData: ProductFormData) => {
@@ -63,22 +59,16 @@ const Products = () => {
         <button
           className="flex items-center bg-blue-500 hover:bg-blue-700 text-gray-200 font-bold py-2 px-4 rounded"
           onClick={() => setIsModalOpen(true)}
-        >
-          <PlusCircleIcon className="w-5 h-5 mr-2 !text-gray-200" /> Create
-          Product
+  >
+          <PlusCircleIcon className="w-5 h-5 mr-2 !text-gray-200" /> CreateProduct
         </button>
       </div>
 
       {/* BODY PRODUCTS LIST */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg-grid-cols-3 gap-10 justify-between">
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : (
+        {isLoading ? ( <div>Loading...</div> ) : (
           products?.map((product) => (
-            <div
-              key={product.productId}
-              className="border shadow rounded-md p-4 max-w-full w-full mx-auto"
-            >
+            <div key={product.productId} className="border shadow rounded-md p-4 max-w-full w-full mx-auto">
               <div className="flex flex-col items-center">
                 <Image
                   src={`https://s3-inventorymanagement.s3.us-east-2.amazonaws.com/product${
