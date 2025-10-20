@@ -10,19 +10,19 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Starting marketplace seed...");
 
-  // Clear existing data
+  // Clear existing data in correct order (respecting foreign key constraints)
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.cart.deleteMany();
+  await prisma.sales.deleteMany();
+  await prisma.purchases.deleteMany();
   await prisma.productCompatibility.deleteMany();
   await prisma.product.deleteMany();
   await prisma.carModel.deleteMany();
   await prisma.carBrand.deleteMany();
   await prisma.partCategory.deleteMany();
   await prisma.users.deleteMany();
-  await prisma.sales.deleteMany();
-  await prisma.purchases.deleteMany();
   await prisma.expenseByCategory.deleteMany();
   await prisma.expenseSummary.deleteMany();
   await prisma.purchaseSummary.deleteMany();
