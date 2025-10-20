@@ -26,10 +26,10 @@ export default function RootLayout({
               <div className="text-lg font-semibold text-gray-800">Car Parts Marketplace</div>
               <div className="flex items-center gap-3">
                 <SignedOut>
-                  <SignInButton signInUrl="/sign-in">
+                  <SignInButton>
                     <button className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Sign in</button>
                   </SignInButton>
-                  <SignUpButton signUpUrl="/sign-up">
+                  <SignUpButton>
                     <button className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">Sign up</button>
                   </SignUpButton>
                 </SignedOut>
