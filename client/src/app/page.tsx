@@ -1,12 +1,40 @@
-import ShaderBackground from "@/components/ui/shader-background";
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Shield, Truck, Store, Star, Users, Zap, ArrowRight, CheckCircle, MapPin, Clock, Award } from "lucide-react";
 import Image from "next/image";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
+  const { user, isLoaded } = useUser();
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      // If user is signed in, redirect to dashboard
+      router.push("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Show loading while checking authentication
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  // If user is signed in, don't show landing page (will redirect)
+  if (isSignedIn) {
+    return null;
+  }
+
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <ShaderBackground />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       
       {/* Hero Section */}
       <section className="relative z-10 min-h-screen flex items-center justify-center px-4">

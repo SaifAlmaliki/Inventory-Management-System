@@ -5,6 +5,48 @@ import { sortProductsByLocation } from "../utils/locationUtils";
 
 const prisma = new PrismaClient();
 
+// Simple products endpoint for testing (no auth required)
+export const getSimpleProducts = async (req: Request, res: Response) => {
+  try {
+    const { search } = req.query;
+
+    const where: any = {
+      isApproved: true // Only show approved products
+    };
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: "insensitive" } },
+        { description: { contains: search as string, mode: "insensitive" } }
+      ];
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      include: {
+        dealer: {
+          select: {
+            userId: true,
+            name: true,
+            businessName: true,
+            storeName: true,
+            city: true,
+            province: true
+          }
+        },
+        category: true
+      },
+      take: 20,
+      orderBy: { createdAt: "desc" }
+    });
+
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching simple products:", error);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+};
+
 // Search products with filters and location-based sorting
 export const searchProducts = async (req: Request, res: Response) => {
   try {

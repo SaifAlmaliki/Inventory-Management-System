@@ -52,7 +52,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (isLoaded) {
       if (isSignedIn && user) {
-        const role = (user.publicMetadata?.role as UserRole) || UserRole.CUSTOMER;
+        const role = (user.publicMetadata?.role as UserRole) || 
+                    (user.unsafeMetadata?.role as UserRole) || 
+                    UserRole.CUSTOMER;
         
         // Create user object for Redux store
         const userData = {
@@ -99,7 +101,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
 
   // Redirect to onboarding if user doesn't have role set
-  if (isSignedIn && user && !user.publicMetadata?.role) {
+  if (isSignedIn && user && !user.publicMetadata?.role && !user.unsafeMetadata?.role) {
+    // Give them a default role for now, or redirect to onboarding
     router.push("/onboarding");
     return null;
   }

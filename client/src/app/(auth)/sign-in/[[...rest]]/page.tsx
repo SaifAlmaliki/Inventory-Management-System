@@ -15,7 +15,12 @@ export default function SignInCatchAllPage() {
           </p>
         </div>
         <div className="flex justify-center">
-          <SignIn routing="path" signUpUrl="/sign-up" />
+          <SignIn 
+            routing="path" 
+            signUpUrl="/sign-up"
+            redirectUrl="/dashboard"
+            afterSignInUrl="/dashboard"
+          />
         </div>
       </div>
     </div>

@@ -16,6 +16,16 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Suppress specific warnings in development
+      config.ignoreWarnings = [
+        /defaultProps will be removed from function components/,
+        /Support for defaultProps will be removed/,
+      ];
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

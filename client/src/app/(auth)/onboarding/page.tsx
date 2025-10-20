@@ -9,6 +9,8 @@ export default function OnboardingPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     role: "CUSTOMER" as UserRole,
     phoneNumber: "",
@@ -25,19 +27,49 @@ export default function OnboardingPage() {
     if (!user) return;
 
     setIsSubmitting(true);
+    setError(null);
+    
     try {
-      // Update user metadata with role and additional info
+      // Try to update user metadata with role
       await user.update({
         publicMetadata: {
           role: formData.role,
         },
       });
 
-      // Here you would typically send the additional info to your backend
-      // For now, we'll just redirect to dashboard
-      router.push("/dashboard");
+      // Wait a moment for the metadata to be updated
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setSuccess(true);
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
     } catch (error) {
       console.error("Error updating user:", error);
+      
+      // If publicMetadata fails, try unsafeMetadata
+      try {
+        await user.update({
+          unsafeMetadata: {
+            role: formData.role,
+            phoneNumber: formData.phoneNumber,
+            address: formData.address,
+            city: formData.city,
+            province: formData.province,
+            businessName: formData.businessName,
+            businessLicense: formData.businessLicense,
+            storeName: formData.storeName,
+          },
+        });
+        setSuccess(true);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
+      } catch (secondError) {
+        console.error("Error with unsafeMetadata:", secondError);
+        setError("Failed to save profile. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -76,6 +108,16 @@ export default function OnboardingPage() {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
+              Profile saved successfully! Redirecting to dashboard...
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700">
@@ -233,10 +275,10 @@ export default function OnboardingPage() {
           <div>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || success}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {isSubmitting ? "Creating Account..." : "Complete Setup"}
+              {isSubmitting ? "Saving Profile..." : success ? "Profile Saved!" : "Complete Setup"}
             </button>
           </div>
         </form>

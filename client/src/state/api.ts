@@ -324,7 +324,7 @@ export interface User {
 export const api = createApi({
   // Configure base query with environment-specific API URL
   baseQuery: fetchBaseQuery({ 
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001",
     prepareHeaders: (headers) => {
       // Add auth token if available
       const token = localStorage.getItem("clerk-token");
@@ -348,7 +348,7 @@ export const api = createApi({
     }),
     getProducts: build.query<Product[], string | void>({
       query: (search) => ({
-        url: "/products",
+        url: "/products/simple",
         params: search ? { search } : {},
       }),
       providesTags: ["Products"],
