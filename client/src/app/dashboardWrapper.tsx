@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Navbar from "@/app/(components)/Navbar";
 import Sidebar from "@/app/(components)/Sidebar";
 import { useAppSelector, useAppDispatch } from "./redux";
@@ -14,6 +14,19 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const pathname = usePathname();
+
+  // Public routes that should not be wrapped or redirected
+  const isPublicRoute = () => {
+    if (!pathname) return false;
+    return (
+      pathname === "/" ||
+      pathname.startsWith("/sign-in") ||
+      pathname.startsWith("/sign-up") ||
+      pathname.startsWith("/onboarding") ||
+      pathname.startsWith("/marketplace")
+    );
+  };
   
   const isSidebarCollapsed = useAppSelector(
     (state) => state.global.isSidebarCollapsed
@@ -71,10 +84,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Redirect to sign-in if not authenticated
-  if (!isSignedIn) {
+  // Redirect to sign-in if not authenticated and route is protected
+  if (!isSignedIn && !isPublicRoute()) {
     router.push("/sign-in");
     return null;
+  }
+
+  // For public routes, render child page without dashboard shell
+  if (isPublicRoute()) {
+    return <>{children}</>;
   }
 
   // Redirect to onboarding if user doesn't have role set
