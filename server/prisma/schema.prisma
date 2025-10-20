@@ -13,40 +13,216 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Users {
-  userId String @id
-  name   String
-  email  String
+// Enums
+enum UserRole {
+  CUSTOMER
+  DEALER
+  ADMIN
 }
 
-model Products {
-  productId     String      @id
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+enum ProductCondition {
+  NEW
+  USED
+  REFURBISHED
+}
+
+// User Management
+model Users {
+  userId        String   @id @default(cuid())
+  clerkId       String   @unique
+  name          String
+  email         String   @unique
+  role          UserRole
+  phoneNumber   String?
+  address       String?
+  city          String?
+  province      String?
+  isApproved    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Dealer-specific fields
+  businessName    String?
+  businessLicense String?
+  storeName       String?
+  
+  // Relations
+  productsAsDealer Product[] @relation("DealerProducts")
+  ordersAsCustomer Order[]   @relation("CustomerOrders")
+  ordersAsDealer   Order[]   @relation("DealerOrders")
+  cart             Cart?
+  
+  @@map("users")
+}
+
+// Car Brands and Models
+model CarBrand {
+  brandId String    @id @default(cuid())
+  name    String    @unique
+  models  CarModel[]
+  
+  @@map("car_brands")
+}
+
+model CarModel {
+  modelId    String   @id @default(cuid())
+  name       String
+  brandId    String
+  brand      CarBrand @relation(fields: [brandId], references: [brandId])
+  yearStart  Int
+  yearEnd    Int
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  compatibleParts ProductCompatibility[]
+  
+  @@map("car_models")
+}
+
+// Part Categories
+model PartCategory {
+  categoryId String    @id @default(cuid())
+  name       String    @unique
+  description String?
+  products   Product[]
+  createdAt  DateTime  @default(now())
+  
+  @@map("part_categories")
+}
+
+// Product Compatibility
+model ProductCompatibility {
+  compatibilityId String    @id @default(cuid())
+  productId       String
+  modelId         String
+  product         Product   @relation(fields: [productId], references: [productId])
+  carModel        CarModel  @relation(fields: [modelId], references: [modelId])
+  
+  @@unique([productId, modelId])
+  @@map("product_compatibility")
+}
+
+// Updated Products Model
+model Product {
+  productId     String            @id @default(cuid())
   name          String
   price         Float
   rating        Float?
   stockQuantity Int
-  Sales         Sales[]
-  Purchases     Purchases[]
+  description   String?
+  partNumber    String?
+  oemNumber     String?
+  condition     ProductCondition
+  warranty      String?
+  manufacturer  String?
+  images        Json?             // Array of image URLs
+  isApproved    Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  // Relations
+  dealerId      String
+  dealer        Users             @relation("DealerProducts", fields: [dealerId], references: [userId])
+  categoryId    String
+  category      PartCategory      @relation(fields: [categoryId], references: [categoryId])
+  compatibility ProductCompatibility[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  sales         Sales[]
+  purchases     Purchases[]
+  
+  @@map("products")
 }
 
-model Sales {
-  saleId      String   @id
+// Cart and Order Management
+model Cart {
+  cartId     String     @id @default(cuid())
+  customerId String     @unique
+  customer   Users      @relation(fields: [customerId], references: [userId])
+  items      CartItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  
+  @@map("carts")
+}
+
+model CartItem {
+  cartItemId String  @id @default(cuid())
+  cartId     String
+  productId  String
+  quantity   Int
+  cart       Cart    @relation(fields: [cartId], references: [cartId])
+  product    Product @relation(fields: [productId], references: [productId])
+  
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Order {
+  orderId         String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerId      String
+  dealerId        String
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  deliveryAddress String
+  deliveryCity    String
+  deliveryProvince String
+  customerPhone   String
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  customer Users @relation("CustomerOrders", fields: [customerId], references: [userId])
+  dealer   Users @relation("DealerOrders", fields: [dealerId], references: [userId])
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  orderItemId String  @id @default(cuid())
+  orderId     String
   productId   String
-  timestamp   DateTime
+  quantity    Int
+  unitPrice   Float
+  order       Order   @relation(fields: [orderId], references: [orderId])
+  product     Product @relation(fields: [productId], references: [productId])
+  
+  @@map("order_items")
+}
+
+// Keep existing analytics models for dealer inventory tracking
+model Sales {
+  saleId      String   @id @default(cuid())
+  productId   String
+  timestamp   DateTime @default(now())
   quantity    Int
   unitPrice   Float
   totalAmount Float
-  product     Products @relation(fields: [productId], references: [productId])
+  product     Product  @relation(fields: [productId], references: [productId])
+  
+  @@map("sales")
 }
 
 model Purchases {
-  purchaseId String   @id
+  purchaseId String   @id @default(cuid())
   productId  String
-  timestamp  DateTime
+  timestamp  DateTime @default(now())
   quantity   Int
   unitCost   Float
   totalCost  Float
-  product    Products @relation(fields: [productId], references: [productId])
+  product    Product  @relation(fields: [productId], references: [productId])
+  
+  @@map("purchases")
 }
 
 model Expenses {

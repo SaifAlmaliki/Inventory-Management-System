@@ -7,6 +7,9 @@ import {
   Provider,
 } from "react-redux";
 import globalReducer from "@/state";
+import cartReducer from "@/state/cartSlice";
+import userReducer from "@/state/userSlice";
+import filtersReducer from "@/state/filtersSlice";
 import { api } from "@/state/api";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
@@ -46,10 +49,13 @@ const storage =
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["global"],
+  whitelist: ["global", "cart", "user", "filters"],
 };
 const rootReducer = combineReducers({
   global: globalReducer,
+  cart: cartReducer,
+  user: userReducer,
+  filters: filtersReducer,
   [api.reducerPath]: api.reducer,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
