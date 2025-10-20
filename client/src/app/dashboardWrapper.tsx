@@ -10,8 +10,6 @@ import { setUser, setAuthenticated, setRole } from "@/state/userSlice";
 import { UserRole } from "@/state/api";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoaded } = useUser();
-  const { isSignedIn } = useAuth();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const pathname = usePathname();
@@ -27,6 +25,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       pathname.startsWith("/marketplace")
     );
   };
+
+  // For public routes, render child page without any Clerk hooks
+  if (isPublicRoute()) {
+    return <>{children}</>;
+  }
+
+  // Only use Clerk hooks for protected routes
+  const { user, isLoaded } = useUser();
+  const { isSignedIn } = useAuth();
   
   const isSidebarCollapsed = useAppSelector(
     (state) => state.global.isSidebarCollapsed
@@ -90,10 +97,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     return null;
   }
 
-  // For public routes, render child page without dashboard shell
-  if (isPublicRoute()) {
-    return <>{children}</>;
-  }
 
   // Redirect to onboarding if user doesn't have role set
   if (isSignedIn && user && !user.publicMetadata?.role) {
